@@ -33,3 +33,9 @@ jobs:
           sudo rm -rf /root/tomcat/webapps/ROOT*
           sudo cp ~/train-ticket/target/*.war /root/tomcat/webapps/ROOT.war
           sudo systemctl restart tomcat
+          script: |
+            echo "Deploying application"
+            cd /home/deploy
+            rm -rf app
+            mkdir app
+

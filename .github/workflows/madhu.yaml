@@ -34,10 +34,10 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
         source: "target/*.war"
-        target: "/home/deploy/"
+        target: "/root/"
 
     # 5. Deploy Application
-    - name: Deploy to EC2
+    - name: Deploy to Tomcat
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -45,18 +45,18 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
         script: |
-            echo "Stopping Tomcat"
-            sudo systemctl stop tomcat
+          echo "Stopping Tomcat"
+          pkill -f tomcat || true
 
-            echo "Cleaning old deployment"
-            sudo rm -rf /root/tomcat/webapps/ROOT
-            sudo rm -f /root/tomcat/webapps/ROOT.war
+          echo "Cleaning old app"
+          rm -rf /root/tomcat/webapps/ROOT
+          rm -f /root/tomcat/webapps/ROOT.war
 
-            echo "Copy new WAR"
-            sudo cp ~/train-ticket/target/*.war /root/tomcat/webapps/ROOT.war
+          echo "Deploying new WAR"
+          WAR_NAME=$(ls /root/*.war | head -n 1)
+          cp $WAR_NAME /root/tomcat/webapps/ROOT.war
 
-            echo "Starting Tomcat"
-            sudo systemctl start tomcat
+          echo "Starting Tomcat"
+          /root/tomcat/bin/startup.sh
 
-            echo "Deployment Finished"
-
+          echo "Deployment Completed"

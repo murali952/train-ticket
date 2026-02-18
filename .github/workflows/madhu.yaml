@@ -45,15 +45,18 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
         script: |
-          echo "Stopping Tomcat"
-          sudo /root/tomcat/bin/shutdown.sh
-          sleep 5
+            echo "Stopping Tomcat"
+            sudo systemctl stop tomcat
 
-          echo "Removing old app"
-          sudo rm -rf /root/tomcat/webapps/ROOT*
+            echo "Cleaning old deployment"
+            sudo rm -rf /root/tomcat/webapps/ROOT
+            sudo rm -f /root/tomcat/webapps/ROOT.war
 
-          echo "Deploying new WAR"
-          sudo mv /home/deploy/*.war /root/tomcat/webapps/ROOT.war
+            echo "Copy new WAR"
+            sudo cp ~/train-ticket/target/*.war /root/tomcat/webapps/ROOT.war
 
-          echo "Starting Tomcat"
-          sudo /root/tomcat/bin/startup.sh
+            echo "Starting Tomcat"
+            sudo systemctl start tomcat
+
+            echo "Deployment Finished"
+

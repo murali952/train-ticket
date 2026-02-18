@@ -43,8 +43,11 @@ jobs:
         port: ${{ secrets.EC2_PORT }}
         script: |
 
-          echo "Stopping Tomcat"
-          sudo pkill -f tomcat || true
+          echo "Stopping Tomcat safely"
+          if [ -f /root/tomcat/bin/shutdown.sh ]; then
+          sudo /root/tomcat/bin/shutdown.sh || true
+          sleep 5
+          fi
 
           echo "Cleaning old app"
           sudo rm -rf /root/tomcat/webapps/ROOT
@@ -58,3 +61,4 @@ jobs:
           sudo /root/tomcat/bin/startup.sh
 
           echo "Deployment Successful"
+

@@ -9,8 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-    - name: Checkout Source
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Setup Java
@@ -22,8 +21,7 @@ jobs:
     - name: Build WAR
       run: mvn clean package
 
-    # Upload to deploy user home (NOT ROOT)
-    - name: Upload WAR to EC2
+    - name: Copy WAR to EC2
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -33,8 +31,7 @@ jobs:
         source: "target/*.war"
         target: "/home/deploy/"
 
-    # Deploy using sudo
-    - name: Deploy to Tomcat
+    - name: Deploy in Tomcat
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -42,23 +39,20 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
         script: |
-
-          echo "Stopping Tomcat safely"
-          if [ -f /root/tomcat/bin/shutdown.sh ]; then
-          sudo /root/tomcat/bin/shutdown.sh || true
+          echo "Stopping Tomcat"
+          sudo /opt/tomcat/bin/shutdown.sh || true
           sleep 5
-          fi
-
-          echo "Cleaning old app"
-          sudo rm -rf /root/tomcat/webapps/ROOT
-          sudo rm -f /root/tomcat/webapps/ROOT.war
-
-          echo "Copy new WAR"
-          WAR_NAME=$(ls /home/deploy/*.war | head -n 1)
-          sudo cp $WAR_NAME /root/tomcat/webapps/ROOT.war
-
+        
+          echo "Removing old app"
+          sudo rm -rf /opt/tomcat/webapps/ROOT
+          sudo rm -f /opt/tomcat/webapps/*.war
+        
+          echo "Copying new WAR"
+          WAR_FILE=$(ls /home/deploy/*.war | head -n 1)
+          sudo cp $WAR_FILE /opt/tomcat/webapps/ROOT.war
+        
           echo "Starting Tomcat"
-          sudo /root/tomcat/bin/startup.sh
-
-          echo "Deployment Successful"
-
+          sudo /opt/tomcat/bin/startup.sh
+          sleep 8
+        
+          echo "Deployed successfully"

@@ -10,22 +10,19 @@ jobs:
 
     steps:
 
-    # 1. Checkout Code
     - name: Checkout Source
       uses: actions/checkout@v4
 
-    # 2. Setup Java
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    # 3. Build WAR
     - name: Build WAR
       run: mvn clean package
 
-    # 4. Upload WAR to EC2
+    # Upload to deploy user home (NOT ROOT)
     - name: Upload WAR to EC2
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -34,9 +31,9 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
         source: "target/*.war"
-        target: "/root/"
+        target: "/home/deploy/"
 
-    # 5. Deploy Application
+    # Deploy using sudo
     - name: Deploy to Tomcat
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -45,18 +42,19 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
         script: |
+
           echo "Stopping Tomcat"
-          pkill -f tomcat || true
+          sudo pkill -f tomcat || true
 
           echo "Cleaning old app"
-          rm -rf /root/tomcat/webapps/ROOT
-          rm -f /root/tomcat/webapps/ROOT.war
+          sudo rm -rf /root/tomcat/webapps/ROOT
+          sudo rm -f /root/tomcat/webapps/ROOT.war
 
-          echo "Deploying new WAR"
-          WAR_NAME=$(ls /root/*.war | head -n 1)
-          cp $WAR_NAME /root/tomcat/webapps/ROOT.war
+          echo "Copy new WAR"
+          WAR_NAME=$(ls /home/deploy/*.war | head -n 1)
+          sudo cp $WAR_NAME /root/tomcat/webapps/ROOT.war
 
           echo "Starting Tomcat"
-          /root/tomcat/bin/startup.sh
+          sudo /root/tomcat/bin/startup.sh
 
-          echo "Deployment Completed"
+          echo "Deployment Successful"

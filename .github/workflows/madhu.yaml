@@ -31,6 +31,7 @@ jobs:
         source: "target/*.war"
         target: "/home/deploy/"
 
+    
     - name: Deploy in Tomcat
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -39,20 +40,23 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
         script: |
+
           echo "Stopping Tomcat"
           sudo /opt/tomcat/bin/shutdown.sh || true
-          sleep 5
-        
-          echo "Removing old app"
+          sleep 10
+    
+          echo "Removing old deployed app"
           sudo rm -rf /opt/tomcat/webapps/ROOT
-          sudo rm -f /opt/tomcat/webapps/*.war
-        
+          sudo rm -f /opt/tomcat/webapps/ROOT.war
+    
           echo "Copying new WAR"
-          WAR_FILE=$(ls /home/deploy/*.war | head -n 1)
-          sudo cp $WAR_FILE /opt/tomcat/webapps/ROOT.war
-        
+          sudo cp /home/deploy/*.war /opt/tomcat/webapps/ROOT.war
+    
           echo "Starting Tomcat"
           sudo /opt/tomcat/bin/startup.sh
-          sleep 8
-        
-          echo "Deployed successfully"
+    
+          echo "Waiting for extraction"
+          sleep 20
+    
+          echo "Deployment Completed"
+    

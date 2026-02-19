@@ -49,8 +49,9 @@ jobs:
        script: |
 
          echo "1. Stop Tomcat"
-         sudo pkill -f tomcat || true
-         sleep 5
+         sudo /root/tomcat/bin/shutdown.sh || true
+         sleep 10
+
       
          echo "2. Clean old deployment"
          sudo rm -rf /root/tomcat/work/*

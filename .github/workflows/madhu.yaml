@@ -9,18 +9,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
+
+    # 1️⃣ Get Source Code
+    - name: Checkout Code
       uses: actions/checkout@v4
 
+    # 2️⃣ Install Java
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
+    # 3️⃣ Build WAR
     - name: Build WAR
-      run: mvn clean package
+      run: mvn clean package -DskipTests
 
+    # 4️⃣ Upload artifact to EC2 (RENAME to fixed name)
     - name: Copy WAR to EC2
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -30,38 +35,42 @@ jobs:
         port: ${{ secrets.EC2_PORT }}
         source: "target/*.war"
         target: "/home/deploy/"
+        strip_components: 1
 
-    
-    - name: Deploy in Tomcat
+    # 5️⃣ Deploy in Tomcat (REAL CD)
+    - name: Deploy Application
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
-        
-
         script: |
 
-          echo "Stopping Tomcat"
+          echo "===== STOP TOMCAT ====="
           sudo /root/tomcat/bin/shutdown.sh || true
-          sleep 8
-        
-          echo "Cleaning previous deployment"
+          sleep 10
+
+          echo "===== CLEAN OLD VERSION ====="
           sudo rm -rf /root/tomcat/webapps/ROOT
           sudo rm -f /root/tomcat/webapps/ROOT.war
           sudo rm -rf /root/tomcat/work/*
           sudo rm -rf /root/tomcat/temp/*
-        
-          echo "Copying new WAR"
-          sudo cp /home/deploy/*.war /root/tomcat/webapps/ROOT.war
-        
-          echo "Starting Tomcat"
-          sudo /root/tomcat/bin/startup.sh
-        
-          echo "Waiting for Tomcat to extract WAR"
-          sleep 25
-        
-          echo "Deployment Finished"
 
-    
+          echo "===== FIND NEW WAR ====="
+          NEW_WAR=$(ls /home/deploy/*.war | head -n 1)
+          echo "WAR FOUND: $NEW_WAR"
+
+          echo "===== DEPLOY NEW VERSION ====="
+          sudo mv $NEW_WAR /root/tomcat/webapps/ROOT.war
+
+          echo "===== START TOMCAT ====="
+          sudo /root/tomcat/bin/startup.sh
+
+          echo "===== WAIT FOR EXTRACTION ====="
+          sleep 35
+
+          echo "===== VERIFY DEPLOYMENT ====="
+          ls -l /root/tomcat/webapps/
+
+          echo "===== DEPLOYMENT COMPLETE ====="

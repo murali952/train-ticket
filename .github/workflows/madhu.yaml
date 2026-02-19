@@ -49,25 +49,26 @@ jobs:
        script: |
 
          echo "1. Stop Tomcat"
-         pkill -f tomcat || true
+         sudo pkill -f tomcat || true
          sleep 5
-
+      
          echo "2. Clean old deployment"
-         rm -rf /root/tomcat/work/*
-         rm -rf /root/tomcat/temp/*
-         rm -rf /root/tomcat/logs/*
-         rm -rf /root/tomcat/webapps/ROOT
-         rm -f  /root/tomcat/webapps/ROOT.war
-  
+         sudo rm -rf /root/tomcat/work/*
+         sudo rm -rf /root/tomcat/temp/*
+         sudo rm -rf /root/tomcat/logs/*
+         sudo rm -rf /root/tomcat/webapps/ROOT
+         sudo rm -f  /root/tomcat/webapps/ROOT.war
+      
          echo "3. Copy new WAR"
-         cp /home/deploy/*.war /root/tomcat/webapps/ROOT.war
-  
+         sudo cp /home/deploy/*.war /root/tomcat/webapps/ROOT.war
+      
          echo "4. Start Tomcat fresh"
-         nohup /root/tomcat/bin/startup.sh >/dev/null 2>&1 &
-  
-         echo "5. Wait for extraction"
+         sudo nohup /root/tomcat/bin/startup.sh >/dev/null 2>&1 &
+      
+         echo "5. Wait for deployment"
          sleep 25
-  
+      
          echo "6. Verify deployment"
          ls -ltr /root/tomcat/webapps
-  
+
+         

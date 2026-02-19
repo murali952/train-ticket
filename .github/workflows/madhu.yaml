@@ -39,24 +39,29 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         port: ${{ secrets.EC2_PORT }}
+        
+
         script: |
 
           echo "Stopping Tomcat"
-          sudo /opt/tomcat/bin/shutdown.sh || true
-          sleep 10
-    
-          echo "Removing old deployed app"
-          sudo rm -rf /opt/tomcat/webapps/ROOT
-          sudo rm -f /opt/tomcat/webapps/ROOT.war
-    
+          sudo /root/tomcat/bin/shutdown.sh || true
+          sleep 8
+        
+          echo "Cleaning previous deployment"
+          sudo rm -rf /root/tomcat/webapps/ROOT
+          sudo rm -f /root/tomcat/webapps/ROOT.war
+          sudo rm -rf /root/tomcat/work/*
+          sudo rm -rf /root/tomcat/temp/*
+        
           echo "Copying new WAR"
-          sudo cp /home/deploy/*.war /opt/tomcat/webapps/ROOT.war
-    
+          sudo cp /home/deploy/*.war /root/tomcat/webapps/ROOT.war
+        
           echo "Starting Tomcat"
-          sudo /opt/tomcat/bin/startup.sh
-    
-          echo "Waiting for extraction"
-          sleep 20
-    
-          echo "Deployment Success"
+          sudo /root/tomcat/bin/startup.sh
+        
+          echo "Waiting for Tomcat to extract WAR"
+          sleep 25
+        
+          echo "Deployment Finished"
+
     

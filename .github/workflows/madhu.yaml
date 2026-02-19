@@ -47,30 +47,26 @@ jobs:
         port: ${{ secrets.EC2_PORT }}
         script: |
 
-          echo "===== STOP TOMCAT ====="
+          echo "Stopping Tomcat"
           sudo /root/tomcat/bin/shutdown.sh || true
           sleep 10
-
-          echo "===== CLEAN OLD VERSION ====="
+        
+          echo "Remove old deployments"
           sudo rm -rf /root/tomcat/webapps/ROOT
           sudo rm -f /root/tomcat/webapps/ROOT.war
           sudo rm -rf /root/tomcat/work/*
           sudo rm -rf /root/tomcat/temp/*
+        
+          echo "Remove old uploaded WAR"
+          rm -f /home/deploy/*.war
 
-          echo "===== FIND NEW WAR ====="
-          NEW_WAR=$(ls /home/deploy/*.war | head -n 1)
-          echo "WAR FOUND: $NEW_WAR"
-
-          echo "===== DEPLOY NEW VERSION ====="
-          sudo mv $NEW_WAR /root/tomcat/webapps/ROOT.war
-
-          echo "===== START TOMCAT ====="
+          echo "Move NEW war to tomcat"
+          sudo mv /home/deploy/*.war /root/tomcat/webapps/ROOT.war
+        
+          echo "Starting Tomcat"
           sudo /root/tomcat/bin/startup.sh
-
-          echo "===== WAIT FOR EXTRACTION ====="
-          sleep 35
-
-          echo "===== VERIFY DEPLOYMENT ====="
-          ls -l /root/tomcat/webapps/
-
-          echo "===== DEPLOYMENT COMPLETE ====="
+        
+          echo "Waiting deploy"
+          sleep 25
+        
+          echo "Deployment Finished"

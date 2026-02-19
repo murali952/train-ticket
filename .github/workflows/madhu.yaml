@@ -58,5 +58,5 @@ jobs:
           echo "Waiting for extraction"
           sleep 20
     
-          echo "Deployment Completed"
+          echo "Deployment Success"
     

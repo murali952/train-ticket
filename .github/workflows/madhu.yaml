@@ -38,35 +38,36 @@ jobs:
         strip_components: 1
 
     # 5️⃣ Deploy in Tomcat (REAL CD)
-    - name: Deploy Application
+    
+    - name: Deploy in Tomcat
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_KEY }}
-        port: ${{ secrets.EC2_PORT }}
-        script: |
+       host: ${{ secrets.EC2_HOST }}
+       username: ${{ secrets.EC2_USER }}
+       key: ${{ secrets.EC2_KEY }}
+       port: ${{ secrets.EC2_PORT }}
+       script: |
 
-          echo "Stopping Tomcat"
-          sudo /root/tomcat/bin/shutdown.sh || true
-          sleep 10
-        
-          echo "Remove old deployments"
-          sudo rm -rf /root/tomcat/webapps/ROOT
-          sudo rm -f /root/tomcat/webapps/ROOT.war
-          sudo rm -rf /root/tomcat/work/*
-          sudo rm -rf /root/tomcat/temp/*
-        
-          echo "Remove old uploaded WAR"
-          rm -f /home/deploy/*.war
+         echo "1. Stop Tomcat"
+         pkill -f tomcat || true
+         sleep 5
 
-          echo "Move NEW war to tomcat"
-          sudo mv /home/deploy/*.war /root/tomcat/webapps/ROOT.war
-        
-          echo "Starting Tomcat"
-          sudo /root/tomcat/bin/startup.sh
-        
-          echo "Waiting deploy"
-          sleep 25
-        
-          echo "Deployment Finished"
+         echo "2. Clean old deployment"
+         rm -rf /root/tomcat/work/*
+         rm -rf /root/tomcat/temp/*
+         rm -rf /root/tomcat/logs/*
+         rm -rf /root/tomcat/webapps/ROOT
+         rm -f  /root/tomcat/webapps/ROOT.war
+  
+         echo "3. Copy new WAR"
+         cp /home/deploy/*.war /root/tomcat/webapps/ROOT.war
+  
+         echo "4. Start Tomcat fresh"
+         nohup /root/tomcat/bin/startup.sh >/dev/null 2>&1 &
+  
+         echo "5. Wait for extraction"
+         sleep 25
+  
+         echo "6. Verify deployment"
+         ls -ltr /root/tomcat/webapps
+  

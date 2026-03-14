@@ -79,12 +79,13 @@ jobs:
           image-ref: ${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
           ignore-unfixed: true
           severity: HIGH,CRITICAL
-
+                                  
       - name: Push to ECR
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          docker push $ACCOUNT_ID.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-      
+          IMAGE_URI=$ACCOUNT_ID.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/hackathon-app:${{ env.IMAGE_TAG }}
+          docker tag train-ticket:$IMAGE_TAG $IMAGE_URI
+          docker push $IMAGE_URI
       
     # 7. Update kubeconfig for EKS
       - name: Update kubeconfig
